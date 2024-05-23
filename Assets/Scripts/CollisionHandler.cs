@@ -7,16 +7,37 @@ public class CollisionHandler : MonoBehaviour
 {
     [SerializeField]float delayTime = 1f;
     [SerializeField] AudioClip onCrash;
-    [SerializeField] AudioClip onSuccess; 
+    [SerializeField] AudioClip onSuccess;
+    [SerializeField] ParticleSystem onCrashPartical;
+    [SerializeField] ParticleSystem onSuccessPartical;  
     AudioSource myAudio;
     bool isTransitioning = false;
+    bool collisionDisable = false;
     void Start()
     {
         myAudio = GetComponent<AudioSource>();
+        
+    }
+
+    void Update()
+    {
+        RespondToDebugKeys();
+    }
+
+    void RespondToDebugKeys()
+    {
+        if(Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        else if(Input.GetKeyDown(KeyCode.C))
+        {
+            collisionDisable = !collisionDisable;
+        }
     }
    void OnCollisionEnter(Collision other)
    {
-        if(isTransitioning){ return; }
+        if(isTransitioning || collisionDisable){ return; }
         switch(other.gameObject.tag)
         {
             case "Friendly":
@@ -37,8 +58,7 @@ public class CollisionHandler : MonoBehaviour
    void StartCrushSequence()
    {
     isTransitioning = true;
-    myAudio.Stop();
-    myAudio.PlayOneShot(onCrash);
+    PlaySoundAndEffects(onCrash,onCrashPartical);
     GetComponent<Movment>().enabled = false;
     Invoke("ReloadLevel",delayTime);
    }
@@ -46,8 +66,7 @@ public class CollisionHandler : MonoBehaviour
    void StartNextLevelSequence()
    {
     isTransitioning = true;
-    myAudio.Stop();
-    myAudio.PlayOneShot(onSuccess);
+    PlaySoundAndEffects(onSuccess,onSuccessPartical);
     GetComponent<Movment>().enabled = false;
     Invoke("LoadNextLevel",delayTime);
    }
@@ -66,5 +85,12 @@ public class CollisionHandler : MonoBehaviour
             nextSceneIndex = 0;
         }
         SceneManager.LoadScene(nextSceneIndex);
+   }
+
+   void PlaySoundAndEffects(AudioClip sceneAudio,ParticleSystem scenePatrical)
+   {
+        myAudio.Stop();
+        myAudio.PlayOneShot(sceneAudio);
+        scenePatrical.Play();
    }
 }
